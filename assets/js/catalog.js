@@ -33,27 +33,144 @@
   var $activeFilters = document.getElementById('active-filters');
   var $searchForm = document.getElementById('search-form');
 
+  /* ---------- BUSCA INTELIGENTE ----------
+     Normaliza acentos, separa em palavras e tolera typos curtos via
+     distância de Levenshtein. Cada produto recebe um "score" pra ordenação.
+  --------------------------------------------*/
+
+  // Remove acentos, baixa caixa, troca pontuação por espaço.
+  function normalize(s) {
+    if (s == null) return '';
+    return String(s)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')   // remove diacríticos
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  // Levenshtein (iterativo, com matriz). Suficiente para palavras curtas.
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    var prev = new Array(b.length + 1);
+    for (var j = 0; j <= b.length; j++) prev[j] = j;
+    for (var i = 1; i <= a.length; i++) {
+      var curr = [i];
+      for (var k = 1; k <= b.length; k++) {
+        var cost = a.charCodeAt(i - 1) === b.charCodeAt(k - 1) ? 0 : 1;
+        curr[k] = Math.min(
+          prev[k] + 1,        // deletion
+          curr[k - 1] + 1,    // insertion
+          prev[k - 1] + cost  // substitution
+        );
+      }
+      prev = curr;
+    }
+    return prev[b.length];
+  }
+
+  // Quanto de erro toleramos por tamanho da palavra
+  function tolerance(wordLen) {
+    if (wordLen <= 3) return 0;       // muito curta: precisa exato (evita falsos positivos)
+    if (wordLen <= 5) return 1;       // 1 erro
+    if (wordLen <= 8) return 2;       // 2 erros
+    return 2;                          // qualquer tamanho: máx 2
+  }
+
+  // Score de match de uma palavra-busca contra um texto.
+  //  - Substring exata = 10
+  //  - Substring no início de palavra = 12
+  //  - Palavra inteira igual = 15
+  //  - Match fuzzy (levenshtein <= tolerância) = 6
+  //  - Nada = 0
+  function matchWord(needle, hayWords, hayJoined) {
+    // 1) match direto (substring)
+    if (hayJoined.indexOf(needle) !== -1) {
+      // bônus se for início de palavra
+      for (var i = 0; i < hayWords.length; i++) {
+        if (hayWords[i] === needle) return 15;
+        if (hayWords[i].indexOf(needle) === 0) return 12;
+      }
+      return 10;
+    }
+    // 2) fuzzy contra cada palavra do texto
+    var tol = tolerance(needle.length);
+    if (tol === 0) return 0;
+    for (var j = 0; j < hayWords.length; j++) {
+      // só compara com palavras de tamanho parecido (otimização)
+      if (Math.abs(hayWords[j].length - needle.length) > tol) continue;
+      if (levenshtein(needle, hayWords[j]) <= tol) return 6;
+    }
+    return 0;
+  }
+
+  // Index pre-calculado: para cada produto, palavras normalizadas dos campos.
+  // (Reconstrói se productsDB mudar — barato pra 15 produtos.)
+  var searchIndex = null;
+  function buildIndex() {
+    searchIndex = window.productsDB.map(function (p) {
+      var nameN = normalize(p.nome);
+      var descN = normalize(p.descricao);
+      var catN  = normalize(WA.getCategoria(p.categoria));
+      var subN  = p.subcategoria ? normalize(WA.getSubcategoria(p.subcategoria)) : '';
+      var tagsN = (p.tags || []).map(normalize).join(' ');
+      return {
+        product: p,
+        name: { words: nameN.split(' ').filter(Boolean), joined: nameN },
+        desc: { words: descN.split(' ').filter(Boolean), joined: descN },
+        cat:  { words: (catN + ' ' + subN).split(' ').filter(Boolean), joined: catN + ' ' + subN },
+        tags: { words: tagsN.split(' ').filter(Boolean), joined: tagsN }
+      };
+    });
+  }
+
+  function scoreProduct(item, needles) {
+    var total = 0;
+    for (var i = 0; i < needles.length; i++) {
+      var n = needles[i];
+      // Peso por campo: nome > tags > categoria > descrição.
+      var s = matchWord(n, item.name.words, item.name.joined) * 3
+            + matchWord(n, item.tags.words, item.tags.joined) * 2
+            + matchWord(n, item.cat.words,  item.cat.joined)  * 1.5
+            + matchWord(n, item.desc.words, item.desc.joined) * 1;
+      if (s === 0) return 0;  // toda palavra precisa achar alguma coisa
+      total += s;
+    }
+    return total;
+  }
+
   /* ---------- FILTRAGEM E ORDENAÇÃO ---------- */
   function filterProducts() {
-    var list = window.productsDB.slice();
+    if (!searchIndex) buildIndex();
+    var list;
+    var hasSearch = !!state.search && state.search.trim() !== '';
 
-    if (state.search) {
-      var q = state.search.toLowerCase().trim();
-      list = list.filter(function (p) {
-        return p.nome.toLowerCase().indexOf(q) !== -1 ||
-               p.descricao.toLowerCase().indexOf(q) !== -1 ||
-               (p.tags && p.tags.some(function (t) { return t.toLowerCase().indexOf(q) !== -1; }));
-      });
+    if (hasSearch) {
+      var needles = normalize(state.search).split(' ').filter(Boolean);
+      var scored = searchIndex
+        .map(function (item) { return { product: item.product, score: scoreProduct(item, needles) }; })
+        .filter(function (x) { return x.score > 0; });
+
+      if (state.sort === 'destaque' || !state.sort) {
+        // Quando há busca, ordena por score (mais relevante primeiro)
+        scored.sort(function (a, b) { return b.score - a.score; });
+      }
+      list = scored.map(function (x) { return x.product; });
+    } else {
+      list = window.productsDB.slice();
     }
+
     if (state.categoria) list = list.filter(function (p) { return p.categoria === state.categoria; });
     if (state.subcategoria) list = list.filter(function (p) { return p.subcategoria === state.subcategoria; });
 
-    // Ordenação
+    // Ordenação explícita sobrescreve o score-sort acima
     if (state.sort === 'nome-asc') list.sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
     else if (state.sort === 'nome-desc') list.sort(function (a, b) { return b.nome.localeCompare(a.nome, 'pt-BR'); });
     else if (state.sort === 'preco-asc') list.sort(function (a, b) { return a.preco - b.preco; });
     else if (state.sort === 'preco-desc') list.sort(function (a, b) { return b.preco - a.preco; });
-    else { // destaque (padrão)
+    else if (!hasSearch) { // destaque (só quando não houver busca)
       list.sort(function (a, b) {
         if (a.destaque && !b.destaque) return -1;
         if (!a.destaque && b.destaque) return 1;
@@ -62,6 +179,7 @@
     }
     return list;
   }
+
 
   /* ---------- RENDER: GRID ---------- */
   function renderGrid() {
@@ -105,8 +223,13 @@
         '</a>'
       : '';
 
+    // Card é um <article> (não <a>) para permitir <a> e <button> internos sem
+    // criar HTML inválido (anchor dentro de anchor faz o parser fechar o
+    // externo cedo, quebrando o layout). O link principal cobre toda a área
+    // via ::before (posicionado absoluto) no CSS.
     return '' +
-      '<a class="card" href="produto.html?id=' + p.id + '" aria-label="Ver detalhes de ' + WA.escapeHTML(p.nome) + '">' +
+      '<article class="card" data-id="' + p.id + '">' +
+        '<a class="card-link" href="produto.html?id=' + p.id + '" aria-label="Ver detalhes de ' + WA.escapeHTML(p.nome) + '"></a>' +
         tags +
         '<div class="card-media">' +
           '<img src="' + WA.escapeHTML(img) + '" data-fallback="' + placeholder + '" alt="" loading="lazy" decoding="async">' +
@@ -125,7 +248,7 @@
             '</div>' +
           '</div>' +
         '</div>' +
-      '</a>';
+      '</article>';
   }
 
   function bindCardActions() {

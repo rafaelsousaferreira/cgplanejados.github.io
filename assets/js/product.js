@@ -188,14 +188,15 @@
     relEl.innerHTML = related.map(function (p) {
       var img = (p.imagens && p.imagens[0]) || WA.productPlaceholder(p);
       var ph = WA.productPlaceholder(p).replace(/"/g, '&quot;');
-      return '<a class="card" href="produto.html?id=' + p.id + '">' +
+      return '<article class="card">' +
+        '<a class="card-link" href="produto.html?id=' + p.id + '" aria-label="Ver detalhes de ' + WA.escapeHTML(p.nome) + '"></a>' +
         (p.destaque ? '<span class="card-tag tag-rust">Destaque</span>' : '') +
         '<div class="card-media"><img src="' + WA.escapeHTML(img) + '" data-fallback="' + ph + '" alt="" loading="lazy"></div>' +
         '<div class="card-body">' +
         '<div class="card-cat">' + WA.escapeHTML(WA.getCategoria(p.categoria)) + '</div>' +
         '<h3>' + WA.escapeHTML(p.nome) + '</h3>' +
         '<div class="card-foot"><div class="card-price">' + WA.formatCurrency(p.preco) + '<small>à vista</small></div></div>' +
-        '</div></a>';
+        '</div></article>';
     }).join('');
     WA.applyImgFallbacks(relEl);
   }

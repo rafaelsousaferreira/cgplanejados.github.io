@@ -64,7 +64,9 @@ WA.renderNav = function (active) {
 
 /* ---------- FAB WhatsApp ---------- */
 WA.renderFab = function () {
-  return '<a class="fab-wa" target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp">' +
+  var msg = 'Olá! Vim pelo site da ' + WA.config.businessName + ' e gostaria de mais informações.';
+  var href = WA.buildWALink ? WA.buildWALink(msg) : ('https://wa.me/' + WA.config.whatsappNumber);
+  return '<a class="fab-wa" href="' + href + '" target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp">' +
          WA.icons.wa + '</a>';
 };
 

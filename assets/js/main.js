@@ -161,15 +161,7 @@ function initNav() {
   }
 }
 
-/* ---------- FAB WHATSAPP ---------- */
-function initFabWA() {
-  var fab = document.querySelector('.fab-wa');
-  if (!fab) return;
-  if (!fab.getAttribute('href')) {
-    var msg = 'Olá! Vim pelo site da ' + WA.config.businessName + ' e gostaria de mais informações.';
-    fab.setAttribute('href', WA.buildWALink(msg));
-  }
-}
+/* ---------- FAB WhatsApp: href é setado em partials.js no render ---------- */
 
 /* ---------- FORMULÁRIO DE ORÇAMENTO ----------
    Funcional de verdade: valida, sanitiza, monta a mensagem
@@ -346,7 +338,6 @@ function initYear() {
 /* ---------- INIT ---------- */
 document.addEventListener('DOMContentLoaded', function () {
   initNav();
-  initFabWA();
   initQuoteForm();
   initYear();
 });
