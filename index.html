@@ -23,7 +23,7 @@
      - Iframes: só Google Maps (mapa)
      - form-action: bloqueia post pra terceiros; nosso form usa window.open pra wa.me -->
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-src https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-src https://www.google.com; base-uri 'self'; form-action 'self'">
 
 <!-- Favicon SVG inline -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232a1f17'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='600' fill='%23f5ecdf' text-anchor='middle' font-style='italic'%3EW%3C/text%3E%3C/svg%3E">
@@ -456,34 +456,11 @@
 <div id="footer-slot"></div>
 <div id="fab-slot"></div>
 
+<script src="assets/js/main.js"></script>
 <script src="assets/js/products.js"></script>
 <script src="assets/js/testimonials.js"></script>
 <script src="assets/js/partials.js"></script>
-<script src="assets/js/main.js"></script>
 
-<!-- Render dos destaques na home (idem cards do catálogo) -->
-<script>
-(function () {
-  var el = document.getElementById('featured-grid');
-  if (!el || !window.productsDB) return;
-  var destaques = window.productsDB.filter(function (p) { return p.destaque; }).slice(0, 8);
-  el.innerHTML = destaques.map(function (p) {
-    var img = (p.imagens && p.imagens[0]) || WA.productPlaceholder(p);
-    var ph = WA.productPlaceholder(p).replace(/"/g, '&quot;');
-    return '<a class="card" href="produto.html?id=' + p.id + '">' +
-      '<span class="card-tag tag-rust">Destaque</span>' +
-      '<div class="card-media"><img src="' + WA.escapeHTML(img) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'' + ph + '\';"></div>' +
-      '<div class="card-body">' +
-        '<div class="card-cat">' + WA.escapeHTML(WA.getCategoria(p.categoria)) + '</div>' +
-        '<h3>' + WA.escapeHTML(p.nome) + '</h3>' +
-        '<p class="card-desc">' + WA.escapeHTML(p.descricao.slice(0, 100)) + '…</p>' +
-        '<div class="card-foot">' +
-          '<div class="card-price">' + WA.formatCurrency(p.preco) + '<small>à vista</small></div>' +
-        '</div>' +
-      '</div>' +
-    '</a>';
-  }).join('');
-})();
-</script>
+<script src="assets/js/home.js"></script>
 </body>
 </html>
