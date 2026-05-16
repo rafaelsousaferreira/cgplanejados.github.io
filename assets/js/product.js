@@ -27,8 +27,41 @@
 
   // Atualiza título da aba e meta description
   document.title = product.nome + ' — ' + WA.config.businessName;
-  var meta = document.querySelector('meta[name="description"]');
-  if (meta) meta.setAttribute('content', product.descricao.slice(0, 160));
+  setMeta('name', 'description', product.descricao.slice(0, 160));
+
+  // Atualiza Open Graph + Twitter Cards dinamicamente
+  var canonicalUrl = 'https://cgplanejados.com.br/produto.html?id=' + product.id;
+  setMeta('property', 'og:title',       product.nome + ' — ' + WA.config.businessName);
+  setMeta('property', 'og:description', product.descricao.slice(0, 200));
+  setMeta('property', 'og:url',         canonicalUrl);
+  if (product.imagens && product.imagens[0]) {
+    var imgUrl = product.imagens[0];
+    if (!/^https?:\/\//.test(imgUrl)) imgUrl = 'https://cgplanejados.com.br/' + imgUrl;
+    setMeta('property', 'og:image', imgUrl);
+    setMeta('name', 'twitter:image', imgUrl);
+  }
+  setMeta('name', 'twitter:title',       product.nome + ' — ' + WA.config.businessName);
+  setMeta('name', 'twitter:description', product.descricao.slice(0, 200));
+
+  // Canonical
+  var canon = document.querySelector('link[rel="canonical"]');
+  if (!canon) {
+    canon = document.createElement('link');
+    canon.rel = 'canonical';
+    document.head.appendChild(canon);
+  }
+  canon.href = canonicalUrl;
+
+  function setMeta(attr, name, value) {
+    var sel = 'meta[' + attr + '="' + name + '"]';
+    var el = document.querySelector(sel);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', value);
+  }
 
   // Breadcrumb
   var crumb = document.getElementById('product-name-breadcrumb');
