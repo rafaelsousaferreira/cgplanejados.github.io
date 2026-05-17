@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a1f17">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<title>Onde entregamos: mapa de peças pelo Brasil — C&amp;G Planejados</title>
+<meta name="description" content="De Camaçari/BA para todo o Brasil: veja onde as peças da C&amp;G Planejados já foram entregues. Mapa interativo com cidades, peças, madeiras e datas.">
+<link rel="canonical" href="https://cgplanejados.com.br/entregas.html">
+<link rel="alternate" hreflang="pt-BR" href="https://cgplanejados.com.br/entregas.html">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="C&amp;G Planejados">
+<meta property="og:title" content="Onde entregamos — Mapa de peças pelo Brasil">
+<meta property="og:description" content="De Camaçari/BA para todo o Brasil. Veja o mapa interativo de entregas.">
+<meta property="og:url" content="https://cgplanejados.com.br/entregas.html">
+<meta property="og:image" content="https://cgplanejados.com.br/assets/images/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Onde entregamos — C&amp;G Planejados">
+<meta name="twitter:description" content="Mapa interativo de peças entregues pelo Brasil.">
+<meta name="twitter:image" content="https://cgplanejados.com.br/assets/images/og-image.jpg">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232a1f17'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='21' font-weight='600' fill='%23f5ecdf' text-anchor='middle' font-style='italic'%3EC%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Onde entregamos — Mapa de peças pelo Brasil",
+  "url": "https://cgplanejados.com.br/entregas.html",
+  "description": "Mapa interativo das cidades brasileiras onde as peças da C&G Planejados já foram entregues.",
+  "isPartOf": { "@id": "https://cgplanejados.com.br/#website" },
+  "about": { "@id": "https://cgplanejados.com.br/#business" }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Início",   "item": "https://cgplanejados.com.br/" },
+    { "@type": "ListItem", "position": 2, "name": "Entregas", "item": "https://cgplanejados.com.br/entregas.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div id="nav-slot" data-active="entregas"></div>
+
+<nav class="crumb" aria-label="Breadcrumb">
+  <div class="container">
+    <a href="index.html">Início</a> &rsaquo; <span>Entregas</span>
+  </div>
+</nav>
+
+<main id="main">
+
+<section class="ent-hero">
+  <div class="container">
+    <div class="eyebrow">Onde entregamos</div>
+    <h1>De Camaçari para<br><em>todo o Brasil.</em></h1>
+    <p class="lede">Cada pin no mapa abaixo é uma peça que saiu do nosso ateliê na Bahia e foi pra alguma casa Brasil afora. Toque ou passe o mouse para ver o quê e quando.</p>
+  </div>
+</section>
+
+<section class="ent-counters">
+  <div class="container">
+    <div class="ent-counters-grid">
+      <div class="ent-counter">
+        <div class="ent-counter-num" id="count-pecas">—</div>
+        <div class="ent-counter-label">Peças entregues</div>
+      </div>
+      <div class="ent-counter">
+        <div class="ent-counter-num" id="count-cidades">—</div>
+        <div class="ent-counter-label">Cidades atendidas</div>
+      </div>
+      <div class="ent-counter">
+        <div class="ent-counter-num" id="count-estados">—</div>
+        <div class="ent-counter-label">Estados</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ent-map-section">
+  <div class="container">
+    <div id="br-map" class="br-map" aria-label="Mapa interativo do Brasil com pins das entregas">
+      <div style="padding:3rem;text-align:center;color:var(--ink-3);">Carregando mapa…</div>
+    </div>
+    <p class="ent-map-hint" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Cada pin é uma cidade. Pins com número indicam mais de uma entrega no mesmo lugar.
+    </p>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="eyebrow">Lista completa</div>
+    <h2 style="margin-bottom:1.5rem;">Todas as entregas recentes.</h2>
+    <p style="color:var(--ink-2);max-width:62ch;margin-bottom:2rem;">Por privacidade dos clientes, identificamos só por cidade e peça. Frete e logística costumam ser combinados caso a caso — temos parceiros de transporte de móveis em todas as capitais.</p>
+
+    <div class="ent-table-wrap">
+      <table class="ent-table">
+        <thead>
+          <tr>
+            <th>Quando</th>
+            <th>Cidade</th>
+            <th>Peça</th>
+            <th>Madeira</th>
+          </tr>
+        </thead>
+        <tbody id="entregas-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section section-dark" style="padding-top:4rem;padding-bottom:5rem;">
+  <div class="container" style="text-align:center;max-width:680px;">
+    <h2 style="color:var(--paper);">Sua cidade é a próxima.</h2>
+    <p class="lede" style="color:rgba(245,236,223,0.78);margin:1rem auto 2rem;">Atendemos o Brasil inteiro. Combinamos frete por transportadora especializada ou retirada no ateliê em Camaçari/BA.</p>
+    <a href="configurador.html" class="btn btn-primary">Solicitar orçamento
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+</main>
+
+<div id="footer-slot"></div>
+<div id="fab-slot"></div>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/partials.js"></script>
+<script src="assets/js/entregas.js"></script>
+</body>
+</html>
