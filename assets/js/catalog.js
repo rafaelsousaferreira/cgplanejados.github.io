@@ -17,9 +17,26 @@
     perPage: 12
   };
 
-  // Lê categoria da URL (?categoria=mobiliario)
-  var urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('categoria')) state.categoria = urlParams.get('categoria');
+  /* ---------- URL ↔ ESTADO ----------
+     A URL é a fonte de verdade pros filtros. Vantagens:
+     - Compartilhar link já filtrado funciona
+     - Botão "voltar" do navegador retorna pro estado anterior
+     - Recarregar a página preserva o filtro
+     - Cada combinação de filtro é uma URL indexável por crawler
+  --------------------------------------------*/
+
+  // Lê todos os params da URL e popula o estado.
+  // Chamada uma vez no INIT e também em cada popstate (botão voltar).
+  function readStateFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    state.search      = params.get('busca')        || '';
+    state.categoria   = params.get('categoria')    || '';
+    state.subcategoria= params.get('subcategoria') || '';
+    state.sort        = params.get('ordem')        || 'destaque';
+    var pageNum = parseInt(params.get('pagina'), 10);
+    state.page        = (pageNum && pageNum > 0) ? pageNum : 1;
+  }
+  readStateFromURL();
 
   /* ---------- ELEMENTOS ---------- */
   var $grid = document.getElementById('products-grid');
@@ -297,6 +314,7 @@
         if (!isNaN(p)) {
           state.page = p;
           renderGrid();
+          syncURL('push'); // entra no histórico — voltar volta pra página anterior
           window.scrollTo({ top: $grid.offsetTop - 120, behavior: 'smooth' });
         }
       });
@@ -348,17 +366,49 @@
         updateSubcategorias();
         updateActiveFilters();
         renderGrid();
-        syncURL();
+        syncURL('push'); // remover chip é navegação
       });
     });
   }
 
-  /* ---------- URL SYNC ---------- */
-  function syncURL() {
+  /* ---------- URL SYNC ----------
+     Push (default): nova entrada no histórico — permite voltar.
+     Replace: substitui a atual — usar em mudanças "silenciosas"
+              (ex: digitação no debounce de busca, paginação)
+              para não poluir o histórico.
+  --------------------------------------------*/
+  function syncURL(method) {
+    method = method || 'push';
     var u = new URL(window.location.href);
-    if (state.categoria) u.searchParams.set('categoria', state.categoria);
-    else u.searchParams.delete('categoria');
-    window.history.replaceState({}, '', u);
+    setOrDelete(u, 'busca',        state.search);
+    setOrDelete(u, 'categoria',    state.categoria);
+    setOrDelete(u, 'subcategoria', state.subcategoria);
+    setOrDelete(u, 'ordem',        state.sort !== 'destaque' ? state.sort : '');
+    setOrDelete(u, 'pagina',       state.page > 1 ? String(state.page) : '');
+
+    // Se a URL ficou igual, não cria entrada nova no histórico
+    if (u.href === window.location.href) return;
+    if (method === 'replace') {
+      window.history.replaceState({ catalog: true }, '', u);
+    } else {
+      window.history.pushState({ catalog: true }, '', u);
+    }
+  }
+  function setOrDelete(url, key, value) {
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
+  }
+
+  /* ---------- APLICA ESTADO NA UI ----------
+     Sincroniza os inputs com state. Usado depois de popstate
+     (botão "voltar") e no INIT.
+  --------------------------------------------*/
+  function applyStateToUI() {
+    if ($search    && $search.value    !== state.search)      $search.value    = state.search;
+    if ($catFilter && $catFilter.value !== state.categoria)   $catFilter.value = state.categoria;
+    updateSubcategorias(); // popula select de subcategoria conforme categoria atual
+    if ($subFilter && $subFilter.value !== state.subcategoria) $subFilter.value = state.subcategoria;
+    if ($sortFilter && $sortFilter.value !== state.sort)      $sortFilter.value = state.sort;
   }
 
   function resetFilters() {
@@ -374,7 +424,7 @@
     updateSubcategorias();
     updateActiveFilters();
     renderGrid();
-    syncURL();
+    syncURL('push'); // limpar filtros é uma navegação — pode voltar
   }
 
   /* ---------- BIND DE CONTROLES ---------- */
@@ -385,6 +435,7 @@
       state.page = 1;
       updateActiveFilters();
       renderGrid();
+      syncURL('push'); // submit explícito é navegação — entra no histórico
     });
   }
   if ($search) {
@@ -396,6 +447,8 @@
         state.page = 1;
         updateActiveFilters();
         renderGrid();
+        // Digitação contínua: replace pra não criar 1 entrada de histórico por letra
+        syncURL('replace');
       }, 350);
     });
   }
@@ -407,7 +460,7 @@
       updateSubcategorias();
       updateActiveFilters();
       renderGrid();
-      syncURL();
+      syncURL('push');
     });
   }
   if ($subFilter) {
@@ -416,18 +469,72 @@
       state.page = 1;
       updateActiveFilters();
       renderGrid();
+      syncURL('push');
     });
   }
   if ($sortFilter) {
     $sortFilter.addEventListener('change', function () {
       state.sort = $sortFilter.value;
       renderGrid();
+      syncURL('push');
     });
   }
 
+  /* ---------- POPSTATE (botão "voltar" do navegador) ----------
+     Quando o usuário aperta voltar/avançar, releemos a URL e
+     aplicamos o estado novamente — incluindo restaurar inputs.
+  --------------------------------------------*/
+  window.addEventListener('popstate', function () {
+    readStateFromURL();
+    applyStateToUI();
+    updateActiveFilters();
+    renderGrid();
+  });
+
   /* ---------- INIT ---------- */
-  if ($catFilter && state.categoria) $catFilter.value = state.categoria;
-  updateSubcategorias();
-  updateActiveFilters();
+  applyStateToUI();      // preenche os inputs com o estado lido da URL
+  updateActiveFilters(); // mostra chips de filtros ativos
   renderGrid();
+
+  /* ---------- PERSISTIR SCROLL ----------
+     Quando o usuário clica num produto e depois volta pro catálogo,
+     restauramos a posição de rolagem para onde ele estava.
+     Chave inclui a URL completa (com filtros) — se o filtro mudar,
+     posição reseta naturalmente.
+  --------------------------------------------*/
+  var SCROLL_KEY = 'cg:catalog:scroll';
+  function saveScroll() {
+    try {
+      sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
+        href: window.location.href,
+        y: window.scrollY
+      }));
+    } catch (e) { /* sessionStorage indisponível, ignora */ }
+  }
+  function restoreScroll() {
+    try {
+      var raw = sessionStorage.getItem(SCROLL_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && data.href === window.location.href && typeof data.y === 'number') {
+        // Aguarda render do grid e imagens pra evitar pulo
+        window.requestAnimationFrame(function () {
+          window.scrollTo(0, data.y);
+          // Limpa pra não restaurar 2× se o usuário interagir
+          sessionStorage.removeItem(SCROLL_KEY);
+        });
+      }
+    } catch (e) { /* sessionStorage indisponível, ignora */ }
+  }
+
+  // Salva scroll antes de navegar pra qualquer outra página
+  window.addEventListener('beforeunload', saveScroll);
+  // Também ao clicar num card (mais confiável que beforeunload em algumas situações)
+  $grid.addEventListener('click', function (e) {
+    var link = e.target.closest('a.card-link');
+    if (link) saveScroll();
+  });
+
+  // Restaura na primeira render
+  restoreScroll();
 })();
