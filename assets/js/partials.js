@@ -41,6 +41,7 @@ WA.renderNav = function (active) {
         navLink('configurador.html',   'Configurador', current === 'configurador') +
         navLink('madeiras.html',       'Madeiras',     current === 'madeiras') +
         navLink('galeria.html',        'Galeria',      current === 'galeria') +
+        navLink('entregas.html',       'Entregas',     current === 'entregas') +
         navLink('depoimentos.html',    'Depoimentos',  current === 'depoimentos') +
       '</ul>' +
       '<a href="configurador.html" class="nav-cta">Solicitar orçamento ' + WA.icons.arrow + '</a>' +
@@ -54,6 +55,7 @@ WA.renderNav = function (active) {
       '<a href="configurador.html">Configurador</a>' +
       '<a href="madeiras.html">Madeiras</a>' +
       '<a href="galeria.html">Galeria</a>' +
+      '<a href="entregas.html">Entregas</a>' +
       '<a href="depoimentos.html">Depoimentos</a>' +
       '<a href="index.html#sobre">Sobre</a>' +
       '<a href="index.html#contato">Contato</a>' +
@@ -93,6 +95,7 @@ WA.renderFooter = function () {
           '<li><a href="configurador.html">Configurador</a></li>' +
           '<li><a href="madeiras.html">Madeiras</a></li>' +
           '<li><a href="galeria.html">Galeria</a></li>' +
+          '<li><a href="entregas.html">Entregas</a></li>' +
           '<li><a href="depoimentos.html">Depoimentos</a></li>' +
           '<li><a href="index.html#orcamento">Solicitar orçamento</a></li>' +
         '</ul>' +
